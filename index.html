@@ -2960,9 +2960,83 @@ button[onclick="openGiftGuide()"] {
     from { border-color: #b3e5fc; }
     to { border-color: #00bfff; box-shadow: 0 0 8px rgba(0, 191, 255, 0.3); }
 }
+
+   /* --- LOADING SCREEN STYLE --- */
+#loading-screen {
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: #ffffff; /* Nền trắng sạch sẽ */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 2000000; /* Cao nhất hệ thống */
+    transition: opacity 0.8s ease-out, visibility 0.8s;
+}
+
+.loading-content {
+    text-align: center;
+    width: 80%;
+    max-width: 300px;
+}
+
+.loading-icon {
+    font-size: 4rem;
+    margin-bottom: 20px;
+    animation: heartBeat 1.5s infinite, loadingRotate 3s infinite linear;
+    filter: drop-shadow(0 0 10px rgba(255, 105, 180, 0.3));
+}
+
+@keyframes loadingRotate {
+    0% { transform: rotate(0deg) scale(1); }
+    50% { transform: rotate(180deg) scale(1.2); }
+    100% { transform: rotate(360deg) scale(1); }
+}
+
+.loading-bar-container {
+    width: 100%;
+    height: 8px;
+    background: #fff0f6;
+    border-radius: 10px;
+    border: 1px solid #ffe1f0;
+    overflow: hidden;
+    margin-bottom: 15px;
+}
+
+#loading-progress {
+    width: 0%;
+    height: 100%;
+    background: linear-gradient(to right, #ffb6c1, #ff69b4);
+    box-shadow: 0 0 10px rgba(255, 105, 180, 0.4);
+    transition: width 0.3s ease;
+}
+
+#loading-text {
+    font-family: 'Georgia', serif;
+    font-style: italic;
+    color: #ff69b4;
+    font-size: 0.9rem;
+    letter-spacing: 1px;
+}
+
+/* Biến mất mượt mà */
+#loading-screen.fade-out {
+    opacity: 0;
+    visibility: hidden;
+}
     </style>
 </head>
 <body onclick="initAudio(); sounds.tap();">
+
+ <!-- Màn hình Loading -->
+<div id="loading-screen">
+    <div class="loading-content">
+        <div class="loading-icon">🌸</div>
+        <div class="loading-bar-container">
+            <div id="loading-progress"></div>
+        </div>
+        <p id="loading-text">Đang nạp bùa chú...</p>
+    </div>
+</div>
 
 <div id="loginBox">
     <div class="login-card">
@@ -4835,15 +4909,49 @@ function renderHistory() {
 }
 
 window.onload = () => {
-    let lastUser = Object.keys(db).sort((a,b) => db[b].lastSeen - db[a].lastSeen)[0];
-    if(lastUser) {
-        user = lastUser;
-        showApp();
-    } else {
-        document.body.classList.add("is-logging-in");
-        // Hiển thị gợi ý nếu có dữ liệu từ lần đăng xuất trước
-        showLastUserHint(); 
-    }
+    const loadingScreen = document.getElementById("loading-screen");
+    const progressBar = document.getElementById("loading-progress");
+    const loadingText = document.getElementById("loading-text");
+    
+    let progress = 0;
+    const messages = [
+        "Đang dọn dẹp khu vườn...",
+        "Đang chuẩn bị linh phù...",
+        "Đang nạp bùa chú ngọt ngào...",
+        "Chào mừng Tiên Tử trở lại!"
+    ];
+
+    // Giả lập quá trình loading (Khoảng 2 giây)
+    const interval = setInterval(() => {
+        progress += Math.random() * 20; // Tăng ngẫu nhiên cho thật
+        if (progress > 100) progress = 100;
+        
+        progressBar.style.width = progress + "%";
+        
+        // Đổi thông báo theo tiến độ
+        if (progress > 75) loadingText.innerText = messages[3];
+        else if (progress > 50) loadingText.innerText = messages[2];
+        else if (progress > 25) loadingText.innerText = messages[1];
+
+        if (progress >= 100) {
+            clearInterval(interval);
+            
+            // Xử lý logic đăng nhập sau khi loading xong
+            let lastUser = Object.keys(db).sort((a,b) => db[b].lastSeen - db[a].lastSeen)[0];
+            if(lastUser) {
+                user = lastUser;
+                showApp();
+            } else {
+                document.body.classList.add("is-logging-in");
+                showLastUserHint();
+            }
+
+            // Biến mất màn hình loading
+            setTimeout(() => {
+                loadingScreen.classList.add("fade-out");
+            }, 500);
+        }
+    }, 150);
 };
 
 /* --- CARO GAME LOGIC 8x8 - LUẬT 5 NƯỚC --- */
