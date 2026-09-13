@@ -4624,7 +4624,7 @@ function renderShop() {
     const month = new Date().getMonth() + 1;
     
     const specials = {
-        1: ["Gói 100k", 1399], 2: ["Skin 199qh", 999], 3: ["Skin 199qh", 899],
+        1: ["Skin 199qh", 1399], 2: ["Skin 199qh", 999], 3: ["Skin 199qh", 899],
         4: ["Ssm thường", 1555], 5: ["Thẻ Garena 100k", 2099], 6: ["Ssm thường", 2499],
         7: ["Skin 199qh", 2899], 8: ["Skin 199qh", 3399], 9: ["Ssm thường", 3899],
         10: ["Skin 199qh", 4199], 11: ["Ssm thường", 4799], 12: ["Gói 100k", 5299]
@@ -4689,30 +4689,37 @@ function renderShop() {
 
 function renderAccumulationTable() {
     const tableBody = document.getElementById("statsTableBody");
-    const daysInMonths = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
-    const ticketPerDay = 5;
+    const currentYear = new Date().getFullYear();
+    const isLeapYear = (currentYear % 4 === 0 && currentYear % 100 !== 0) || (currentYear % 400 === 0);
+    const daysInMonths = [31, isLeapYear ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+    
+    // 3 vé free mỗi ngày (điểm danh + online 2 mốc) + 37 vé đổi từ shop điểm mỗi tháng
+    const dailyFreeTickets = 3;
+    const shopExchangeTicketsPerMonth = 37;
     const minBadgePerTicket = 3;
     
     let totalTickets = 0;
     let html = "";
     
-    // Bắt đầu tính tích lũy từ tháng 3 (index 2)
-    for (let i = 2; i < 12; i++) {
+    // Cập nhật tiêu đề năm động trên bảng
+    const statsTitleEl = document.querySelector("#accumulationStats h3");
+    if (statsTitleEl) {
+        statsTitleEl.innerText = `📈 Ước Tính Tích Lũy ${currentYear} 📈`;
+    }
+
+    for (let i = 0; i < 12; i++) {
         let monthDays = daysInMonths[i];
-        let ticketsThisMonth = monthDays * ticketPerDay;
+        let ticketsThisMonth = (monthDays * dailyFreeTickets) + shopExchangeTicketsPerMonth;
         totalTickets += ticketsThisMonth;
         let totalBadges = totalTickets * minBadgePerTicket;
         
-        const isCurrentMonth = (new Date().getMonth() === i);
+        const now = new Date();
+        const isCurrentMonth = (now.getFullYear() === currentYear && now.getMonth() === i);
         
-        // LOGIC MÀU SẮC:
-        // Nếu là tháng hiện tại: Chữ hồng đậm (#ff1493), in cực đậm, nền hồng nhạt.
-        // Nếu không phải: Chữ xám đậm (#666), độ đậm bình thường, không nền.
         const rowStyle = isCurrentMonth 
             ? "font-weight: 800; color: #ff1493; background: #fff0f6;" 
             : "font-weight: 500; color: #666; background: transparent;";
 
-        // Màu riêng cho cột Huy hiệu của tháng hiện tại để nổi bật hơn nữa
         const badgeColor = isCurrentMonth ? "#d81b60" : "#888";
 
         html += `
