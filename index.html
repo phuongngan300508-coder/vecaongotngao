@@ -3964,6 +3964,7 @@ function login() {
         badges: 0,
         tickets: 0,
         money: 0,
+        lastYear: new Date().getFullYear(),
         inventory: [],
         logs: {
             system: [{time: new Date().toLocaleTimeString('vi-VN'), msg: "Khởi tạo hành trình ngọt ngào", rare: true}], 
@@ -4016,6 +4017,11 @@ function closeProfile(e) {
 }
 
 function showApp() {
+    // Kiểm tra và reset sang năm mới (chỉ chạy 1 lần duy nhất trong năm mới)
+    if (user && db[user]) {
+        checkYearlyReset(db[user]);
+    }
+
     // 1. CỐ LẬP DỮ LIỆU: Xóa sạch nội dung cũ trên giao diện để không bị lẫn
     // Xóa Nhật ký, Kho đồ và Bàn cờ cũ của người chơi trước
     const historyBox = document.getElementById("history");
@@ -4048,11 +4054,11 @@ function showApp() {
     updateUI();
     
     // 7. VẼ LẠI CÁC THÀNH PHẦN PHỤ THUỘC USER
-    renderShop();                 // Shop quà (kiểm tra xem user đã đổi quà chưa)
-    renderInventory();            // Kho đồ riêng của user
-    renderHistory();              // Nhật ký riêng của user
+    renderShop();                    // Shop quà (kiểm tra xem user đã đổi quà chưa)
+    renderInventory();               // Kho đồ riêng của user
+    renderHistory();                 // Nhật ký riêng của user
     renderAccumulationTable();    // Bảng tính toán
-    initCanvas();                 // Khởi tạo lại khung vẽ
+    initCanvas();                    // Khởi tạo lại khung vẽ
 
     // 8. KÍCH HOẠT ÂM THANH
     initAudio(); 
@@ -6497,6 +6503,37 @@ function openGiftGuide() {
 function closeGiftGuide() {
     document.getElementById("giftGuideModal").style.display = "none";
     if(typeof sounds !== 'undefined') sounds.tap();
+}
+
+ function checkYearlyReset(u) {
+    const currentYear = new Date().getFullYear();
+    
+    // Nếu tài khoản cũ chưa có lastYear (lần đầu cập nhật code này), gán bằng năm hiện tại để không bị mất đồ oan
+    if (u.lastYear === undefined) {
+        u.lastYear = currentYear;
+        return;
+    }
+
+    // Nếu năm hiện tại lớn hơn năm đã lưu -> Đánh dấu vừa bước sang năm mới (chỉ chạy 1 lần duy nhất)
+    if (u.lastYear < currentYear) {
+        u.badges = 0;
+        u.tickets = 0;
+        u.specialClaimed = false;
+        u.fixedClaimed = false;
+        if (u.sgwLimits) u.sgwLimits.giftClaimed = false;
+        
+        // Lưu lại năm mới vào tài khoản
+        u.lastYear = currentYear;
+        save();
+
+        if (u.logs && u.logs.system) {
+            u.logs.system.unshift({
+                time: new Date().toLocaleString('vi-VN', { hour: '2-digit', minute: '2-digit', second: '2-digit', day: '2-digit', month: '2-digit' }),
+                msg: `🎆 Chúc mừng năm mới ${currentYear}! Huy hiệu và vé đã được làm mới về 0.`,
+                rare: true
+            });
+        }
+    }
 }
 </script>
 </body>
