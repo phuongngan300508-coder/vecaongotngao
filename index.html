@@ -3270,6 +3270,7 @@ button[onclick="openGiftGuide()"] {
         <div class="stat-card">🎫 Vé: <br><b id="ticketVal">0</b></div>
         <div class="stat-card">💰 Số dư: <br><b id="moneyVal">0</b> đ</div>
         <div class="stat-card">⏳ Online: <br><b id="timerVal">00:00</b></div>
+        <div class="stat-card">🎆 Reset năm mới: <br><b id="newYearCountdown" style="font-size: 0.85em; color: var(--pink-dark);">--d --h --m --s</b></div>
     </div>
     
     <div class="nav-hint">
@@ -4045,6 +4046,7 @@ function showApp() {
     if (timerInterval) clearInterval(timerInterval); 
     startOnlineTimer();
     updateStreakLogic();
+    startNewYearCountdown();
     
     // 5. ĐỒNG BỘ DỮ LIỆU HỒ SƠ (Rất quan trọng để cập nhật Giới tính/Thâm niên đúng)
     syncProfileUI(); 
@@ -6541,6 +6543,42 @@ function closeGiftGuide() {
             });
         }
     }
+}
+
+ let newYearTimerInterval = null;
+
+function startNewYearCountdown() {
+    if (newYearTimerInterval) clearInterval(newYearTimerInterval);
+
+    function updateCountdown() {
+        const now = new Date();
+        // Thời điểm reset: 00:00:00 ngày 1 tháng 1 năm tiếp theo
+        const nextYear = now.getFullYear() + 1;
+        const targetDate = new Date(`January 1, ${nextYear} 00:00:00`);
+        const diff = targetDate - now;
+
+        const countdownEl = document.getElementById("newYearCountdown");
+        if (!countdownEl) return;
+
+        if (diff <= 0) {
+            countdownEl.innerText = "Đang làm mới...";
+            return;
+        }
+
+        const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+        const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
+        const minutes = Math.floor((diff / 1000 / 60) % 60);
+        const seconds = Math.floor((diff / 1000) % 60);
+
+        const hStr = hours < 10 ? "0" + hours : hours;
+        const mStr = minutes < 10 ? "0" + minutes : minutes;
+        const sStr = seconds < 10 ? "0" + seconds : seconds;
+
+        countdownEl.innerText = `${days}n ${hStr}h ${mStr}p ${sStr}s`;
+    }
+
+    updateCountdown();
+    newYearTimerInterval = setInterval(updateCountdown, 1000);
 }
 </script>
 </body>
